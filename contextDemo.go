@@ -64,8 +64,9 @@ func SubWorker(ctx context.Context, wg *sync.WaitGroup, index int) {
 			time.Sleep(time.Millisecond * time.Duration(sleepTime))
 			return
 		case <-time.After(time.Second):
-			random := <-GlobalResource
-			fmt.Printf("Tick from SubWorker #%d with value %d\n", index, random)
+			if random, ok := <-GlobalResource; ok {
+				fmt.Printf("Tick from SubWorker #%d with value %d\n", index, random)
+			}
 		}
 	}
 }
@@ -79,6 +80,7 @@ func NewResource(ctx context.Context, wg *sync.WaitGroup) chan int {
 			select {
 			case <-ctx.Done():
 				fmt.Println("Resource received ctx.Done signal")
+				close(out)
 				return
 			case out <- rand.Intn(200):
 			}
